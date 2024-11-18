@@ -1,19 +1,19 @@
 #include <iostream>
 #include <vector>
-#include <climits>  // for INT_MAX
-#include <iomanip>  // for setw
+#include <climits>  // INT_MAX를 위해 포함
+#include <iomanip>  // setw를 위해 포함
 
 using namespace std;
 
 int DPCoinChange(vector<int>& coins, int n) {
-    // C[j] represents the minimum number of coins required to make amount j
+    // C[j]는 금액 j를 만들기 위해 필요한 최소 동전 개수를 나타냄
     vector<int> C(n + 1, INT_MAX);
     
-    C[0] = 0;  // Minimum coins required to make amount 0 is 0
+    C[0] = 0;  // 금액 0을 만들기 위해 필요한 최소 동전 개수는 0
 
-    // Consider amounts from 1 to n
+    // 1부터 n까지의 금액을 고려
     for (int j = 1; j <= n; j++) {
-        // Consider each coin in the given set
+        // 주어진 동전 집합에서 각 동전을 고려
         for (int i = 0; i < coins.size(); i++) {
             int coin = coins[i];
             if (coin <= j && C[j - coin] != INT_MAX) {
@@ -22,45 +22,45 @@ int DPCoinChange(vector<int>& coins, int n) {
         }
     }
 
-    // Print the DP table (amounts on top, minimum coins below)
-    cout << "\nDP Table:" << endl;
-    // Print amounts on top
+    // DP 테이블 출력 (위에는 금액, 아래는 최소 동전 개수)
+    cout << "\nDP 테이블:" << endl;
+    // 금액을 위에 출력
     cout << "j   ";
     for (int i = 1; i <= n; i++) {
-        cout << setw(4) << i;  // Adjust spacing with setw
+        cout << setw(4) << i;  // setw를 사용해 간격 조정
     }
     cout << endl;
 
-    // Print separator line
+    // 구분선 출력
     cout << "---------------------";
     for (int i = 1; i <= n; i++) {
-        cout << "----";  // Fixed-width separator
+        cout << "----";  // 고정 폭으로 구분선 출력
     }
     cout << endl;
 
-    // Print minimum number of coins below
+    // 최소 동전 개수를 아래에 출력
     cout << "c   ";
     for (int i = 1; i <= n; i++) {
-        cout << setw(4) << (C[i] == INT_MAX ? "N/A" : to_string(C[i]));  // Print minimum coins or "N/A" if not possible
+        cout << setw(4) << (C[i] == INT_MAX ? "N/A" : to_string(C[i]));  // 최소 동전 개수 출력, 불가능하면 "N/A"
     }
     cout << endl;
 
-    return C[n];  // Return minimum number of coins
+    return C[n];  // 최소 동전 개수를 반환
 }
 
 int main() {
-    // Types of coins (denominations)
+    // 동전의 종류 (액면가)
     vector<int> coins = {16, 10, 5, 1};
-    // Target amount
+    // 목표 금액
     int n = 20;
 
-    // Calculate the minimum number of coins
+    // 최소 동전 개수 계산
     int result = DPCoinChange(coins, n);
 
     if (result != -1) {
-        cout << "\nMinimum number of coins to make change for " << n << ": " << result << endl;
+        cout << "\n" << n << "원을 만들기 위한 최소 동전 개수: " << result << endl;
     } else {
-        cout << "It is not possible to make change for " << n << "." << endl;
+        cout << n << "원을 만들 수 없습니다." << endl;
     }
 
     return 0;
