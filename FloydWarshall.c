@@ -61,9 +61,9 @@ void dijkstra(int locationCount, int distanceMatrix[MAX_SIZE][MAX_SIZE], int sta
 
 void displayDiagonalUpperTable(char LocationArray[][20], int distanceMatrix[][MAX_SIZE], int locationCount) {
     // 상단 헤더 출력
-    printf("           ");
+    printf("       ");
     for (int i = 0; i < locationCount; i++) {
-        printf("%-10s", LocationArray[i]);
+        printf("%-12s", LocationArray[i]);
     }
     printf("\n");
 
