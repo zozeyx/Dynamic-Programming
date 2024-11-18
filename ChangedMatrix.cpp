@@ -1,124 +1,112 @@
 #include <iostream>
-#include <vector>
-#include <climits>
-#include <sstream>
 #include <fstream>
 #include <string>
-#include <cctype>
+#include <sstream>
+#include <limits>
+
+#define INF std::numeric_limits<int>::max()
+#define MAX_MATRICES 100
 
 using namespace std;
 
-// 행렬의 차원을 추출하는 함수
-pair<int, int> get_matrix_dimensions(const vector<vector<int>>& matrix) {
-    return {matrix.size(), matrix[0].size()};
-}
+// 파일에서 행렬 정보를 읽어오는 함수
+int parseMatrixDimensions(ifstream& inputFile, int matrixSizes[][2]) {
+    int matrixCount = 0;
+    int currentRows = 0, currentCols = 0;
+    string line;
 
-// 행렬 곱셈의 최소 횟수를 계산하는 함수 (동적 계획법)
-int matrix_chain_order(const vector<pair<int, int>>& dims, int n) {
-    vector<vector<int>> dp(n, vector<int>(n, INT_MAX));
-    vector<vector<int>> split(n, vector<int>(n, -1));
+    while (getline(inputFile, line)) {
+        if (line.find("[") != string::npos) {
+            currentRows++;
+        }
 
-    // 길이가 1인 경우, 곱셈 횟수는 0
-    for (int i = 0; i < n; ++i) {
-        dp[i][i] = 0;
+        if (currentRows == 1) { // 첫 번째 행에서 열의 개수 계산
+            size_t startPos = line.find("[[");
+            line = (startPos != string::npos) ? line.substr(startPos + 1) : line;
+            stringstream ss(line);
+            string token;
+
+            while (ss >> token) {
+                if (token != "[" && token != "]") {
+                    currentCols++;
+                }
+            }
+        }
+
+        if (line.find("]]") != string::npos) { // 행렬의 끝을 만났을 때
+            matrixSizes[matrixCount][0] = currentRows;
+            matrixSizes[matrixCount][1] = currentCols;
+            matrixCount++;
+
+            currentRows = 0;
+            currentCols = 0;
+        }
     }
 
-    // DP 테이블을 채운다
-    for (int len = 2; len <= n; ++len) {  // len은 곱셈 범위의 길이
-        for (int i = 0; i <= n - len; ++i) {
-            int j = i + len - 1;
-            for (int k = i; k < j; ++k) {
-                int q = dp[i][k] + dp[k+1][j] + dims[i].first * dims[k].second * dims[j].second;
-                if (q < dp[i][j]) {
-                    dp[i][j] = q;
-                    split[i][j] = k;
+    return matrixCount;
+}
+
+// 최적의 행렬 곱셈 순서를 계산하는 함수
+int calculateMinMultiplications(int matrixSizes[][2], int dpTable[][MAX_MATRICES], int count) {
+    for (int i = 0; i <= count; i++) {
+        dpTable[i][i] = 0; // 자기 자신을 곱하는 비용은 0
+    }
+
+    for (int chainLength = 1; chainLength <= count - 1; chainLength++) {
+        for (int i = 0; i <= count - chainLength; i++) {
+            int j = i + chainLength;
+            dpTable[i][j] = INF;
+
+            for (int k = i; k <= j - 1; k++) {
+                int cost = dpTable[i][k] + dpTable[k + 1][j] +
+                           matrixSizes[i][0] * matrixSizes[k][1] * matrixSizes[j][1];
+                if (cost < dpTable[i][j]) {
+                    dpTable[i][j] = cost;
                 }
             }
         }
     }
 
-    // 결과 출력
-    return dp[0][n-1];
+    return dpTable[0][count - 1];
 }
 
-// 행렬 파일을 읽고, 행렬을 파싱하는 함수
-vector<vector<vector<int>>> parse_matrices_from_file(const string& filename, int& num_matrices) {
-    ifstream file(filename);
-    string line;
-    vector<vector<vector<int>>> matrices;
-    vector<vector<int>> current_matrix;
-    bool inside_matrix = false;
-
-    if (!file.is_open()) {
-        cerr << "파일을 열 수 없습니다: " << filename << endl;
-        exit(1);
+// DP 테이블 출력 함수
+void displayDpTable(int dpTable[][MAX_MATRICES], int matrixCount) {
+    printf("DP Table\n");
+    printf("     ");
+    for (int i = 1; i <= matrixCount; i++) {
+        printf("%-10d", i);
     }
+    printf("\n");
 
-    while (getline(file, line)) {
-        // 행렬 구분자 처리
-        if (line.find("A") != string::npos && line.find("=") != string::npos) {
-            // 이전 행렬이 있으면 저장
-            if (!current_matrix.empty()) {
-                matrices.push_back(current_matrix);
-                current_matrix.clear();
-            }
-            inside_matrix = true;
-            continue;
-        }
-
-        // 행렬 데이터 읽기
-        if (inside_matrix && line.find("[[") != string::npos) {
-            // 행렬 시작 부분을 찾으면
-            string matrix_data = line.substr(line.find("[[") + 2);
-            stringstream ss(matrix_data);
-            vector<int> row;
-            int num;
-
-            while (ss >> num) {
-                row.push_back(num);
-            }
-
-            // 행렬의 행 추가
-            if (!row.empty()) {
-                current_matrix.push_back(row);
+    for (int i = 1; i <= matrixCount; i++) {
+        printf("%-5d", i);
+        for (int j = 1; j <= matrixCount; j++) {
+            if (j < i) {
+                printf("          ");
+            } else {
+                printf("%-10d", dpTable[i - 1][j - 1]);
             }
         }
-
-        // 행렬 끝나는 부분 찾기
-        if (inside_matrix && line.find("]]") != string::npos) {
-            matrices.push_back(current_matrix);
-            current_matrix.clear();
-            inside_matrix = false;
-        }
+        printf("\n");
     }
-
-    // 마지막 행렬 처리
-    if (!current_matrix.empty()) {
-        matrices.push_back(current_matrix);
-    }
-
-    num_matrices = matrices.size();
-    return matrices;
 }
 
 int main() {
-    // 파일 경로 설정
-    string filename = "matrices.txt";
-    int num_matrices;
-
-    // 행렬 파싱
-    vector<vector<vector<int>>> matrices = parse_matrices_from_file(filename, num_matrices);
-
-    // 각 행렬의 차원 추출
-    vector<pair<int, int>> dims;
-    for (const auto& matrix : matrices) {
-        dims.push_back(get_matrix_dimensions(matrix));
+    ifstream inputFile("matrix_input.txt");
+    if (!inputFile.is_open()) {
+        cerr << "Error: Unable to open the file.\n";
+        return 1;
     }
 
-    // 행렬 곱셈의 최소 횟수 계산
-    int min_operations = matrix_chain_order(dims, num_matrices);
+    int matrixSizes[MAX_MATRICES][2] = {0};
+    int matrixCount = parseMatrixDimensions(inputFile, matrixSizes);
 
-    cout << "최소 곱셈 횟수: " << min_operations << endl;
+    int dpTable[MAX_MATRICES][MAX_MATRICES];
+    int minOperations = calculateMinMultiplications(matrixSizes, dpTable, matrixCount);
+
+    displayDpTable(dpTable, matrixCount);
+    printf("Minimum number of multiplications: %d\n", minOperations);
 
     return 0;
 }
