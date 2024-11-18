@@ -11,7 +11,7 @@ def knapsack(weights, values, capacity):
                 dp[i][w] = dp[i - 1][w]
 
     # DP 테이블 출력
-    print("테이블:")
+    print("DP Table:")
     for row in dp:
         print(row)
 
@@ -25,4 +25,4 @@ capacity = 10
 
 # 0-1 배낭 문제 해결
 max_value = knapsack(weights, values, capacity)
-print(f"\n최대 가치: {max_value}")
+print(f"\nMaximum Value: {max_value}")
