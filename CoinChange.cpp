@@ -32,7 +32,7 @@ int DPCoinChange(vector<int>& coins, int n) {
     cout << endl;
 
     // Print separator line
-    cout << "-----------------------------";
+    cout << "---------------------";
     for (int i = 1; i <= n; i++) {
         cout << "----";  // Fixed-width separator
     }
