@@ -34,7 +34,7 @@ public class EditDistance {
         System.out.println("Edit Distance Table:");
         
         // 열의 헤더 출력
-        System.out.print("    ");
+        System.out.print("     ");
         for (int j = 0; j < word2.length(); j++) {
             System.out.print(word2.charAt(j) + "  ");
         }
@@ -60,6 +60,6 @@ public class EditDistance {
         String word2 = "stone";
 
         int result = minDistance(word1, word2);
-        System.out.println("The minimum edit distance is: " + result);
+        System.out.println("Edit distance is: " + result);
     }
 }
